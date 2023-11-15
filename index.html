@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Single Player Retro Game</title>
+        <style>
+
+            @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+            /* style the canvas on the page */
+canvas#myCanvas {
+    margin: auto;
+    background-image: url("https://i0.wp.com/www.the-pixels.com/wp-content/uploads/2016/06/background.gif?resize=364%2C542&ssl=1");
+    border: 3px solid gray;
+    position: relative;
+}
+#retry {
+  display: none;
+  height: 600px;
+  width: 400px;
+  text-align: center;
+  position: absolute;
+  top: 25px;
+  font-size: 2.25em;
+  font-family: "Press Start 2P", cursive;
+  color: white;
+  z-index: 1000;
+}
+#retry_button {
+  position: absolute;
+  top: 225px;
+  left: 50px;
+  background: none;
+  border: none;
+  font-family: "Press Start 2P", cursive;
+  color: white;
+  font-size: 0.75em;
+}
+#retry_button:hover {
+  color: yellow;
+}
+#play {
+  height: 600px;
+  width: 400px;
+  text-align: center;
+  position: absolute;
+  top: 25px;
+  font-size: 2em;
+  font-family: "Press Start 2P", cursive;
+  color: white;
+  z-index: 1000;
+}
+#play_button {
+  position: absolute;
+  top: 282px;
+  left: 90px;
+  background: none;
+  border: none;
+  font-family: "Press Start 2P", cursive;
+  color: white;
+  font-size: 1.15em;
+}
+#play_button:hover {
+  color: yellow;
+}
+
+    </style>
+</head>
+<body>
+    <style>
+</style>
+
+<!-- declare the canvas element and give it fallback content -->
+<canvas id="myCanvas" width="400" height="600">Your browser does not support JS Canvas</canvas>
+<div id="retry">
+  <h1 id="retry_text"> Game Over</h1>
+  <button id="retry_button" onClick="window.location.reload();"> Try Again? </button>
+</div>
+<div id="play">
+  <button id="play_button" onClick="playGame()"> Ready? </button>
+</div>
+    <script>
+        // cache the canvas
+const canvas = document.getElementById("myCanvas");
+// initialize the context
+let ctx = canvas.getContext("2d");
+
+const retry = document.querySelector("#retry");
+const retryButton = document.querySelector("#retry_button");
+const startButton = document.querySelector("#play");
+
+const CW = canvas.width;
+const CH = canvas.height;
+const halfCW = CW / 2;
+const halfCH = CH / 2;
+
+let startBallX = halfCW - 15;
+let startBallY = halfCH;
+
+let ballX = halfCW - 15;
+let ballY = halfCH;
+let ballW = 30;
+let ballH = 30;
+
+function drawRect(x, y, w, h) {
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 4;
+  ctx.strokeRect(x, y, w, h);
+  ctx.fillRect(x, y, w, h);
+}
+function drawBall() {
+  drawRect(ballX, ballY, ballW, ballH);
+}
+drawBall();
+let paddleW = 100;
+let paddleH = 10;
+
+let startPaddleX = halfCW - paddleW / 2;
+
+let paddleX = halfCW - paddleW / 2;
+let paddleY = CH - paddleH - 10;
+
+function drawPaddle() {
+  drawRect(paddleX, paddleY, paddleW, paddleH);
+}
+drawPaddle();
+
+let ballXSpeed = 5;
+let ballYSpeed = 5;
+function paddleCollision() {
+  if (
+    // is ball left less than paddle right
+    ballX < paddleX + paddleW &&
+    // is ball right greater than paddle left
+    ballX + ballW > paddleX &&
+    // is ball top less than paddle bottom
+    ballY < paddleY + paddleH &&
+    // is ball bottom greater than paddle top
+    ballY + ballH > paddleY
+  ) {
+    // return a true value
+    return true;
+  }
+}
+
+//event listener (constantly waits for something to happen)
+let moveRight = false;
+let moveLeft = false;
+document.addEventListener("keydown", function (event) {
+  if (event.key === "ArrowRight") {
+    // paddleX += 10;
+    moveRight = true;
+  }
+  if (event.key === "ArrowLeft") {
+    // paddleX -= 10;
+    moveLeft = true;
+  }
+});
+document.addEventListener("keyup", function (event) {
+  if (event.key === "ArrowRight") {
+    // paddleX += 10;
+    moveRight = false;
+  }
+  if (event.key === "ArrowLeft") {
+    // paddleX -= 10;
+    moveLeft = false;
+  }
+});
+
+startButton.style.visibility = "visible";
+
+let gameState = 0;
+
+let bounces = 0;
+function playGame() {
+  gameState = 1;
+
+
+  startButton.style.display = "none";
+  // console.log("I'm Playing!");
+  ballX += ballXSpeed;
+  ballY += ballYSpeed;
+  // canvas has to be cleared
+  ctx.clearRect(0, 0, CW, CH);
+
+  if (ballX + ballW > CW || ballX < 0) {
+    // ballX = halfCW;
+    ballXSpeed *= -1;
+  }
+  if (/* ballY + ballH > CH || */ ballY < 0) {
+    // ballY = halfCH;
+    ballYSpeed *= -1;
+  }
+  if (ballY + ballH > CH - 10) {
+    ballXSpeed = 0;
+    ballYSpeed = 0;
+    moveLeft = false;
+    moveRight = false;
+    retry.style.display = "block";
+    gameState = 0;
+  }
+
+  // draw the ball
+  if (paddleCollision()) {
+    // console.log("hello");
+    ballYSpeed *= -1;
+    bounces++;
+    console.log("bounces" + bounces);
+    // ballXSpeed *= -1;
+  }
+  if (moveRight) {
+    paddleX += 10;
+  }
+  if (moveLeft) {
+    paddleX -= 10;
+  }
+  if (paddleX + paddleW > CW - 1 || paddleX + paddleW < 101) {
+    if (moveRight) {
+      paddleX -= 10;
+    }
+    if (moveLeft) {
+      paddleX += 10;
+    }
+  }
+  drawHUD();
+  drawBall();
+  drawPaddle();
+  // recursively call the playGame function
+  requestAnimationFrame(playGame);
+}
+function drawHUD() {
+  ctx.font = "15px 'Press Start 2P'";
+  ctx.fillText("bounces: " + bounces, 50, 50);
+}
+
+function buttonGone() {
+  startButton.style.visibility = "hidden";
+
+  gameState = 1;
+}
+function retryGame() {
+  ballX = startBallX;
+  ballY = startBallY;
+//   ballXSpeed = 0;
+//   ballYSpeed = 0;
+
+  paddleX = startPaddleX;
+  startButton.style.display = "block";
+  retry.style.visibility = "hidden";
+  gameState = 1;
+}
+
+if (gameState == 1) {
+  playGame();
+}
+
+    </script>
+</body>
+</html>
